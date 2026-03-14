@@ -7,3 +7,6 @@ description = "is.js for Rust — a micro check library"
 [dependencies]
 regex = "1"
 chrono = "0.4"
+
+[dev-dependencies]
+serial_test = "3"

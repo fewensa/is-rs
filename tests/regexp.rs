@@ -12,6 +12,12 @@ fn url_accepts_https() {
 }
 
 #[test]
+fn url_accepts_without_scheme() {
+    assert!(is_url("example.com"));
+    assert!(is_url("example.com:8080/path"));
+}
+
+#[test]
 fn url_accepts_ftp() {
     assert!(is_url("ftp://files.example.com/file.txt"));
 }
@@ -26,11 +32,18 @@ fn url_rejects_empty() {
     assert!(!is_url(""));
 }
 
+#[test]
+fn url_rejects_private_ipv4() {
+    assert!(!is_url("http://192.168.1.10"));
+    assert!(!is_url("10.0.0.1"));
+}
+
 // --- is_email ---
 #[test]
 fn email_accepts_valid() {
     assert!(is_email("user@example.com"));
     assert!(is_email("user+tag@sub.example.co.uk"));
+    assert!(is_email("customer/department=shipping@example.com"));
 }
 
 #[test]
@@ -87,11 +100,17 @@ fn time_string_rejects_invalid_hour() {
 fn date_string_accepts_valid() {
     assert!(is_date_string("12/25/2023"));
     assert!(is_date_string("1/1/2023"));
+    assert!(is_date_string("12-25-2023"));
 }
 
 #[test]
 fn date_string_rejects_iso_format() {
     assert!(!is_date_string("2023-12-25"));
+}
+
+#[test]
+fn date_string_rejects_mixed_separators() {
+    assert!(!is_date_string("12/25-2023"));
 }
 
 // --- is_us_zip_code ---
@@ -161,6 +180,7 @@ fn epp_phone_rejects_nanp() {
 #[test]
 fn ssn_accepts_valid() {
     assert!(is_social_security_number("123-45-6789"));
+    assert!(is_social_security_number("123456789"));
 }
 
 #[test]
@@ -199,6 +219,7 @@ fn hexadecimal_accepts_valid() {
     assert!(is_hexadecimal("deadbeef"));
     assert!(is_hexadecimal("DEADBEEF"));
     assert!(is_hexadecimal("0123456789abcdef"));
+    assert!(is_hexadecimal("0xdeadbeef"));
 }
 
 #[test]

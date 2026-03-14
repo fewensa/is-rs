@@ -1,4 +1,4 @@
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::net::Ipv6Addr;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -11,11 +11,19 @@ use regex::Regex;
 // validation is implemented in plain Rust code instead.
 // ---------------------------------------------------------------------------
 
-static RE_URL: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)^(https?|ftp)://[^\s/$.?#].[^\s]*$").unwrap());
+static RE_URL_SCHEME: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)^(?:(https?|ftp)://)?(.+)$").unwrap());
 
-static RE_EMAIL: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$").unwrap());
+static RE_URL_DOMAIN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"(?i)^(?:(?:[a-z\u{00a1}-\u{ffff}0-9](?:[a-z\u{00a1}-\u{ffff}0-9-]*[a-z\u{00a1}-\u{ffff}0-9])?)(?:\.(?:[a-z\u{00a1}-\u{ffff}0-9](?:[a-z\u{00a1}-\u{ffff}0-9-]*[a-z\u{00a1}-\u{ffff}0-9])?))*)(?:\.(?:[a-z\u{00a1}-\u{ffff}]{2,}))$",
+    )
+    .unwrap()
+});
+
+static RE_EMAIL: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?i)^((([a-z]|\d|[!#\$%&'\*\+\-/=\?\^_`{\|}~]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])+(\.([a-z]|\d|[!#\$%&'\*\+\-/=\?\^_`{\|}~]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])+)*)|((")((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(")))@((([a-z]|\d|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])|(([a-z]|\d|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])([a-z]|\d|-|\.|_|~|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])*([a-z]|\d|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])))\.)+(([a-z]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])|(([a-z]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])([a-z]|\d|-|\.|_|~|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])*([a-z]|[\u{00A0}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFEF}])))$"#).unwrap()
+});
 
 static RE_CREDIT_CARD: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -30,7 +38,8 @@ static RE_TIME_STRING: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$").unwrap());
 
 static RE_DATE_STRING: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])/(?:[0-9]{2})?[0-9]{2}$").unwrap()
+    Regex::new(r"^(1[0-2]|0?[1-9])([/-])(3[01]|[12][0-9]|0?[1-9])([/-])((?:[0-9]{2})?[0-9]{2})$")
+        .unwrap()
 });
 
 static RE_US_ZIP_CODE: LazyLock<Regex> =
@@ -53,12 +62,20 @@ static RE_EPP_PHONE: LazyLock<Regex> =
 
 // SSN base format: DDD-DD-DDDD  (lookahead exclusions handled in code)
 static RE_SSN_BASE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^([0-9]{3})-([0-9]{2})-([0-9]{4})$").unwrap());
+    LazyLock::new(|| Regex::new(r"^([0-8][0-9]{2})(-?)([0-9]{2})(-?)([0-9]{4})$").unwrap());
 
 static RE_AFFIRMATIVE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)^(?:1|t(?:rue)?|y(?:es)?|ok(?:ay)?)$").unwrap());
 
-static RE_HEXADECIMAL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9a-fA-F]+$").unwrap());
+static RE_HEXADECIMAL: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?:0x)?[0-9a-fA-F]+$").unwrap());
+
+static RE_IPV4: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$",
+    )
+    .unwrap()
+});
 
 static RE_HEX_COLOR: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$").unwrap());
@@ -77,7 +94,41 @@ static RE_HEX_COLOR: LazyLock<Regex> =
 /// assert!(!is_url("not-a-url"));
 /// ```
 pub fn is_url(s: &str) -> bool {
-    RE_URL.is_match(s)
+    if s.is_empty() || s.chars().any(char::is_whitespace) {
+        return false;
+    }
+
+    let captures = match RE_URL_SCHEME.captures(s) {
+        Some(captures) => captures,
+        None => return false,
+    };
+
+    let remainder = match captures.get(2) {
+        Some(value) => value.as_str(),
+        None => return false,
+    };
+
+    let (authority, path) = split_once_any(remainder, &['/', '?', '#']);
+    if authority.is_empty() {
+        return false;
+    }
+
+    if !path.is_empty() && !path.starts_with('/') {
+        return false;
+    }
+
+    let (host, port) = split_host_port(authority);
+    if host.is_empty() || host.contains('@') {
+        return false;
+    }
+
+    if let Some(port) = port
+        && (port.len() < 2 || port.len() > 5 || !port.chars().all(|ch| ch.is_ascii_digit()))
+    {
+        return false;
+    }
+
+    is_public_ipv4(host) || RE_URL_DOMAIN.is_match(host)
 }
 
 /// Returns `true` if `s` is a valid email address.
@@ -142,7 +193,12 @@ pub fn is_time_string(s: &str) -> bool {
 /// assert!(!is_date_string("2023-12-25"));
 /// ```
 pub fn is_date_string(s: &str) -> bool {
-    RE_DATE_STRING.is_match(s)
+    match RE_DATE_STRING.captures(s) {
+        Some(captures) => {
+            captures.get(2).map(|m| m.as_str()) == captures.get(4).map(|m| m.as_str())
+        }
+        None => false,
+    }
 }
 
 /// Returns `true` if `s` is a valid US ZIP code (5-digit or ZIP+4).
@@ -172,15 +228,9 @@ pub fn is_us_zip_code(s: &str) -> bool {
 /// assert!(!is_ca_postal_code("12345"));
 /// ```
 pub fn is_ca_postal_code(s: &str) -> bool {
-    // Canada Post prohibits D, F, I, O, Q, U in the forward sortation area (first letter).
-    const INVALID_FSA_CHARS: &[char] = &['D', 'F', 'I', 'O', 'Q', 'U'];
-    match RE_CA_POSTAL_CODE_BASE.captures(s) {
-        Some(caps) => {
-            let first = caps[1].chars().next().unwrap_or('\0');
-            !INVALID_FSA_CHARS.contains(&first)
-        }
-        None => false,
-    }
+    const INVALID_CHARS: &[char] = &['D', 'F', 'I', 'O', 'Q', 'U'];
+
+    RE_CA_POSTAL_CODE_BASE.is_match(s) && !s.chars().any(|ch| INVALID_CHARS.contains(&ch))
 }
 
 /// Returns `true` if `s` is a valid UK postcode.
@@ -244,11 +294,12 @@ pub fn is_social_security_number(s: &str) -> bool {
     };
 
     let area: u32 = caps[1].parse().unwrap_or(0);
-    let group: u32 = caps[2].parse().unwrap_or(0);
-    let serial: u32 = caps[3].parse().unwrap_or(0);
+    let first_separator = caps.get(2).map_or("", |value| value.as_str());
+    let group: u32 = caps[3].parse().unwrap_or(0);
+    let second_separator = caps.get(4).map_or("", |value| value.as_str());
+    let serial: u32 = caps[5].parse().unwrap_or(0);
 
-    // Reject specific invalid SSNs advertised in media
-    if s == "219-09-9999" || s == "078-05-1120" {
+    if first_separator != second_separator {
         return false;
     }
 
@@ -328,7 +379,7 @@ pub fn is_hex_color(s: &str) -> bool {
 /// assert!(!is_ip("999.999.999.999"));
 /// ```
 pub fn is_ip(s: &str) -> bool {
-    Ipv4Addr::from_str(s).is_ok() || Ipv6Addr::from_str(s).is_ok()
+    is_ipv4(s) || is_ipv6(s)
 }
 
 /// Returns `true` if `s` is a valid IPv4 address.
@@ -341,7 +392,7 @@ pub fn is_ip(s: &str) -> bool {
 /// assert!(!is_ipv4("2001:db8::1"));
 /// ```
 pub fn is_ipv4(s: &str) -> bool {
-    Ipv4Addr::from_str(s).is_ok()
+    RE_IPV4.is_match(s)
 }
 
 /// Returns `true` if `s` is a valid IPv6 address.
@@ -355,4 +406,51 @@ pub fn is_ipv4(s: &str) -> bool {
 /// ```
 pub fn is_ipv6(s: &str) -> bool {
     Ipv6Addr::from_str(s).is_ok()
+}
+
+fn split_once_any<'a>(value: &'a str, delimiters: &[char]) -> (&'a str, &'a str) {
+    match value.find(delimiters) {
+        Some(index) => (&value[..index], &value[index..]),
+        None => (value, ""),
+    }
+}
+
+fn split_host_port(authority: &str) -> (&str, Option<&str>) {
+    match authority.rsplit_once(':') {
+        Some((host, port)) if !host.contains(':') => (host, Some(port)),
+        _ => (authority, None),
+    }
+}
+
+fn is_public_ipv4(host: &str) -> bool {
+    if !RE_IPV4.is_match(host) {
+        return false;
+    }
+
+    let octets = host
+        .split('.')
+        .map(|part| part.parse::<u16>())
+        .collect::<Result<Vec<_>, _>>();
+
+    let Ok(octets) = octets else {
+        return false;
+    };
+
+    let [a, b, _c, d] = octets.as_slice() else {
+        return false;
+    };
+
+    if *d == 0 || *d == 255 {
+        return false;
+    }
+
+    if matches!((*a, *b), (10, _) | (127, _) | (169, 254) | (192, 168)) {
+        return false;
+    }
+
+    if *a == 172 && (16..=31).contains(b) {
+        return false;
+    }
+
+    (1..=223).contains(a)
 }

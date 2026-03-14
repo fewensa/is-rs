@@ -1,1 +1,160 @@
+/// Returns `true` if `a == b`.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_equal;
+/// assert!(is_equal(1, 1));
+/// assert!(!is_equal(1, 2));
+/// ```
+pub fn is_equal<T: PartialEq>(a: T, b: T) -> bool {
+    a == b
+}
 
+/// Returns `true` if `n` is even.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_even;
+/// assert!(is_even(4));
+/// assert!(!is_even(3));
+/// ```
+pub fn is_even(n: i64) -> bool {
+    n % 2 == 0
+}
+
+/// Returns `true` if `n` is odd.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_odd;
+/// assert!(is_odd(3));
+/// assert!(!is_odd(4));
+/// ```
+pub fn is_odd(n: i64) -> bool {
+    n % 2 != 0
+}
+
+/// Returns `true` if `n > 0`.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_positive;
+/// assert!(is_positive(1.0));
+/// assert!(!is_positive(0.0));
+/// assert!(!is_positive(-1.0));
+/// ```
+pub fn is_positive(n: f64) -> bool {
+    n > 0.0
+}
+
+/// Returns `true` if `n < 0`.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_negative;
+/// assert!(is_negative(-1.0));
+/// assert!(!is_negative(0.0));
+/// assert!(!is_negative(1.0));
+/// ```
+pub fn is_negative(n: f64) -> bool {
+    n < 0.0
+}
+
+/// Returns `true` if `n > min`.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_above;
+/// assert!(is_above(5.0, 3.0));
+/// assert!(!is_above(3.0, 3.0));
+/// ```
+pub fn is_above(n: f64, min: f64) -> bool {
+    n > min
+}
+
+/// Returns `true` if `n < max`.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_under;
+/// assert!(is_under(3.0, 5.0));
+/// assert!(!is_under(5.0, 5.0));
+/// ```
+pub fn is_under(n: f64, max: f64) -> bool {
+    n < max
+}
+
+/// Returns `true` if `min < n < max` (exclusive on both ends).
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_within;
+/// assert!(is_within(5.0, 3.0, 10.0));
+/// assert!(!is_within(3.0, 3.0, 10.0));
+/// assert!(!is_within(10.0, 3.0, 10.0));
+/// ```
+pub fn is_within(n: f64, min: f64, max: f64) -> bool {
+    n > min && n < max
+}
+
+/// Returns `true` if `n` has a fractional component (i.e. is not a whole number).
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_decimal;
+/// assert!(is_decimal(1.5));
+/// assert!(!is_decimal(1.0));
+/// ```
+pub fn is_decimal(n: f64) -> bool {
+    n.fract() != 0.0
+}
+
+/// Returns `true` if `n` has no fractional component.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_integer;
+/// assert!(is_integer(1.0));
+/// assert!(!is_integer(1.5));
+/// ```
+pub fn is_integer(n: f64) -> bool {
+    n.fract() == 0.0
+}
+
+/// Returns `true` if `n` is finite (not NaN and not infinite).
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_finite;
+/// assert!(is_finite(1.0));
+/// assert!(!is_finite(f64::INFINITY));
+/// assert!(!is_finite(f64::NAN));
+/// ```
+pub fn is_finite(n: f64) -> bool {
+    n.is_finite()
+}
+
+/// Returns `true` if `n` is positive or negative infinity.
+///
+/// # Examples
+///
+/// ```
+/// use is_rs::arithmetic::is_infinite;
+/// assert!(is_infinite(f64::INFINITY));
+/// assert!(is_infinite(f64::NEG_INFINITY));
+/// assert!(!is_infinite(1.0));
+/// ```
+pub fn is_infinite(n: f64) -> bool {
+    n.is_infinite()
+}

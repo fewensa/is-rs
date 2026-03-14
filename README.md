@@ -26,13 +26,51 @@ is-rs = "0.1"
 
 ## Usage
 
+### Object-style API (`IS`)
+
+`is-rs` ships a global `IS` constant that mirrors is.js's `is.X / is.not.X / is.all.X / is.any.X` pattern:
+
+```rust
+use is_rs::IS;
+
+// Direct check
+assert!(IS.even(4));
+assert!(IS.email("user@example.com"));
+
+// Negated — IS.not().X(...)
+assert!(IS.not().even(3));
+assert!(IS.not().email("bad"));
+
+// All items in a slice satisfy the predicate — IS.all().X(&[...])
+assert!(IS.all().even(&[2, 4, 6]));
+assert!(IS.all().email(&["a@b.com", "c@d.org"]));
+
+// Any item in a slice satisfies the predicate — IS.any().X(&[...])
+assert!(IS.any().odd(&[2, 3, 4]));
+assert!(IS.any().url(&["bad", "https://ok.com"]));
+```
+
+Multi-argument predicates (`equal`, `above`, `under`, `within`, `in_array`, etc.) support
+`IS.X(...)` and `IS.not().X(...)` but not `all`/`any` (since the slice semantics are ambiguous):
+
+```rust
+use is_rs::IS;
+
+assert!(IS.equal(3, 3));
+assert!(IS.not().equal(1, 2));
+assert!(IS.above(5.0, 3.0));
+assert!(IS.not().within(99.0, 1.0, 10.0));
+```
+
+### Module-level API
+
 ```rust
 use is_rs::arithmetic::is_even;
 use is_rs::regexp::is_email;
 use is_rs::time::is_leap_year;
 
 fn main() {
-    assert!(is_even(4.0));
+    assert!(is_even(4));
     assert!(is_email("user@example.com"));
     assert!(is_leap_year(2024));
 }

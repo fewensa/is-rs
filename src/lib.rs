@@ -26,6 +26,26 @@
 //! assert!(IS.any().odd(&[2, 3, 4]));
 //! ```
 //!
+//! ## Unified numeric input (`Num` trait)
+//!
+//! All arithmetic functions accept any type that implements [`arithmetic::Num`]:
+//! `i8`, `i16`, `i32`, `i64`, `i128`, `isize`, `u8`, `u16`, `u32`, `u64`,
+//! `u128`, `usize`, `f32`, `f64`, and `&str` (parsed as `f64`).
+//!
+//! This means you can pass any numeric primitive — or a string representation —
+//! without explicit casts:
+//!
+//! ```
+//! use is_rs::arithmetic::{is_even, is_positive, is_above};
+//!
+//! assert!(is_even(4i32));
+//! assert!(is_even(4u64));
+//! assert!(is_positive(1i32));
+//! assert!(is_above(5u8, 3u8));
+//! assert!(is_even("4"));
+//! assert!(is_positive("1.5"));
+//! ```
+//!
 //! Add to your `Cargo.toml`:
 //!
 //! ```toml

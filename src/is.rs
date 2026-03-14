@@ -22,7 +22,7 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Local, NaiveDate, Utc, Weekday};
 
-use crate::{arithmetic, array, object, presence, regexp, string, time, types};
+use crate::{arithmetic, arithmetic::Num, array, object, presence, regexp, string, time, types};
 
 // ---------------------------------------------------------------------------
 // Core structs
@@ -148,6 +148,31 @@ macro_rules! impl_check {
             }
         }
     };
+    // Variant for single-argument functions that take any `Num` type.
+    // `Is`, `Not`, `All`, and `Any` all accept any `N: Num` so integer / float /
+    // `&str` literals work without explicit casts at the call site.
+    (num $method:ident, $fn:path) => {
+        impl Is {
+            pub fn $method<N: Num>(&self, v: N) -> bool {
+                $fn(v)
+            }
+        }
+        impl Not {
+            pub fn $method<N: Num>(&self, v: N) -> bool {
+                !$fn(v)
+            }
+        }
+        impl All {
+            pub fn $method<N: Num>(&self, values: &[N]) -> bool {
+                values.iter().all(|&v| $fn(v))
+            }
+        }
+        impl Any {
+            pub fn $method<N: Num>(&self, values: &[N]) -> bool {
+                values.iter().any(|&v| $fn(v))
+            }
+        }
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -168,22 +193,29 @@ impl Is {
 
     /// Returns `true` if `n > min`.
     ///
+    /// Accepts any [`Num`] type (`i32`, `f64`, `&str`, …).
+    ///
     /// ```
     /// use is_rs::IS;
     /// assert!(IS.above(5.0, 3.0));
+    /// assert!(IS.above(5i32, 3i32));
     /// assert!(IS.not().above(3.0, 3.0));
     /// ```
-    pub fn above(&self, n: f64, min: f64) -> bool {
+    pub fn above<N: Num>(&self, n: N, min: N) -> bool {
         arithmetic::is_above(n, min)
     }
 
     /// Returns `true` if `n < max`.
-    pub fn under(&self, n: f64, max: f64) -> bool {
+    ///
+    /// Accepts any [`Num`] type.
+    pub fn under<N: Num>(&self, n: N, max: N) -> bool {
         arithmetic::is_under(n, max)
     }
 
     /// Returns `true` if `min < n < max`.
-    pub fn within(&self, n: f64, min: f64, max: f64) -> bool {
+    ///
+    /// Accepts any [`Num`] type.
+    pub fn within<N: Num>(&self, n: N, min: N, max: N) -> bool {
         arithmetic::is_within(n, min, max)
     }
 }
@@ -193,28 +225,30 @@ impl Not {
         !arithmetic::is_equal(a, b)
     }
 
-    pub fn above(&self, n: f64, min: f64) -> bool {
+    pub fn above<N: Num>(&self, n: N, min: N) -> bool {
         !arithmetic::is_above(n, min)
     }
 
-    pub fn under(&self, n: f64, max: f64) -> bool {
+    pub fn under<N: Num>(&self, n: N, max: N) -> bool {
         !arithmetic::is_under(n, max)
     }
 
-    pub fn within(&self, n: f64, min: f64, max: f64) -> bool {
+    pub fn within<N: Num>(&self, n: N, min: N, max: N) -> bool {
         !arithmetic::is_within(n, min, max)
     }
 }
 
-// Single-arg arithmetic — get all four interfaces
-impl_check!(even, i64, arithmetic::is_even);
-impl_check!(odd, i64, arithmetic::is_odd);
-impl_check!(positive, f64, arithmetic::is_positive);
-impl_check!(negative, f64, arithmetic::is_negative);
-impl_check!(decimal, f64, arithmetic::is_decimal);
-impl_check!(integer, f64, arithmetic::is_integer);
-impl_check!(finite, f64, arithmetic::is_finite);
-impl_check!(infinite, f64, arithmetic::is_infinite);
+// Single-arg arithmetic — all four interfaces (Is/Not/All/Any).
+// The object-style API uses f64 as the concrete type so that numeric literals
+// and all Num types (via as f64) work without extra ceremony at the call site.
+impl_check!(num even, arithmetic::is_even);
+impl_check!(num odd, arithmetic::is_odd);
+impl_check!(num positive, arithmetic::is_positive);
+impl_check!(num negative, arithmetic::is_negative);
+impl_check!(num decimal, arithmetic::is_decimal);
+impl_check!(num integer, arithmetic::is_integer);
+impl_check!(num finite, arithmetic::is_finite);
+impl_check!(num infinite, arithmetic::is_infinite);
 
 // ---------------------------------------------------------------------------
 // Array

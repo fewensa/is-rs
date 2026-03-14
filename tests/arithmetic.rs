@@ -96,3 +96,135 @@ fn test_is_infinite() {
     assert!(!is_infinite(1.0));
     assert!(!is_infinite(f64::NAN));
 }
+
+// -----------------------------------------------------------------------
+// Multi-type / Num trait tests — verifying the unified numeric input
+// -----------------------------------------------------------------------
+
+#[test]
+fn test_even_multi_types() {
+    // integer types
+    assert!(is_even(4i32));
+    assert!(is_even(4u8));
+    assert!(is_even(4u64));
+    assert!(is_even(4i8));
+    assert!(!is_even(3i32));
+    assert!(!is_even(3u16));
+
+    // float (whole number)
+    assert!(is_even(4.0f32));
+    assert!(is_even(4.0f64));
+    assert!(!is_even(3.0f64));
+
+    // string
+    assert!(is_even("4"));
+    assert!(is_even("0"));
+    assert!(!is_even("3"));
+    // "abc" fails to parse → NAN → NAN as i64 = 0 in Rust's saturating cast → even.
+    // This is an implementation detail: invalid strings should not be relied on.
+}
+
+#[test]
+fn test_odd_multi_types() {
+    assert!(is_odd(3i32));
+    assert!(is_odd(3u32));
+    assert!(is_odd(3.0f64));
+    assert!(is_odd("3"));
+    assert!(!is_odd("4"));
+}
+
+#[test]
+fn test_positive_multi_types() {
+    assert!(is_positive(1i32));
+    assert!(is_positive(1u64));
+    assert!(is_positive(1.0f32));
+    assert!(is_positive("1.5"));
+    assert!(!is_positive(0i32));
+    assert!(!is_positive(-1i64));
+    assert!(!is_positive("0"));
+    assert!(!is_positive("-1"));
+    assert!(!is_positive("abc")); // NAN → not positive
+}
+
+#[test]
+fn test_negative_multi_types() {
+    assert!(is_negative(-1i32));
+    assert!(is_negative(-1.0f32));
+    assert!(is_negative("-2.5"));
+    assert!(!is_negative(0i32));
+    assert!(!is_negative(1u8));
+}
+
+#[test]
+fn test_above_multi_types() {
+    assert!(is_above(5i32, 3i32));
+    assert!(is_above(5u64, 3u64));
+    assert!(is_above(5.0f32, 3.0f32));
+    assert!(is_above("5", "3"));
+    assert!(!is_above(3i32, 5i32));
+    assert!(!is_above(3i32, 3i32));
+}
+
+#[test]
+fn test_under_multi_types() {
+    assert!(is_under(3i32, 5i32));
+    assert!(is_under(3.0f32, 5.0f32));
+    assert!(is_under("3", "5"));
+    assert!(!is_under(5i32, 3i32));
+}
+
+#[test]
+fn test_within_multi_types() {
+    assert!(is_within(5i32, 3i32, 10i32));
+    assert!(is_within(5u8, 3u8, 10u8));
+    assert!(is_within(5.0f32, 3.0f32, 10.0f32));
+    assert!(is_within("5", "3", "10"));
+    assert!(!is_within(3i32, 3i32, 10i32));
+    assert!(!is_within(10i32, 3i32, 10i32));
+}
+
+#[test]
+fn test_decimal_multi_types() {
+    assert!(is_decimal(1.5f32));
+    assert!(is_decimal(1.5f64));
+    assert!(is_decimal("1.5"));
+    assert!(!is_decimal(1i32));
+    assert!(!is_decimal("1"));
+    assert!(!is_decimal("1.0"));
+}
+
+#[test]
+fn test_integer_multi_types() {
+    assert!(is_integer(1i32));
+    assert!(is_integer(0u8));
+    assert!(is_integer(1.0f64));
+    assert!(is_integer("2"));
+    assert!(!is_integer(1.5f64));
+    assert!(!is_integer("1.5"));
+}
+
+#[test]
+fn test_finite_multi_types() {
+    assert!(is_finite(1i32));
+    assert!(is_finite(0u8));
+    assert!(is_finite(1.0f32));
+    assert!(is_finite("42"));
+    assert!(!is_finite(f64::INFINITY));
+    assert!(!is_finite("abc")); // NAN → not finite
+}
+
+#[test]
+fn test_infinite_multi_types() {
+    assert!(is_infinite(f64::INFINITY));
+    assert!(is_infinite(f64::NEG_INFINITY));
+    assert!(!is_infinite(1i32));
+    assert!(!is_infinite("42"));
+}
+
+#[test]
+fn test_str_string_equivalence() {
+    // &str and String::as_str() should give identical results
+    let s = String::from("4");
+    assert!(is_even(s.as_str()));
+    assert!(is_positive(s.as_str()));
+}

@@ -1,0 +1,9 @@
+[package]
+name = "is-rs"
+version = "0.1.0"
+edition = "2024"
+description = "is.js for Rust — a micro check library"
+
+[dependencies]
+regex = "1"
+chrono = "0.4"

@@ -9,6 +9,8 @@ A Rust port of [is.js](https://github.com/arasatasaygin/is.js) — a micro check
 is-rs = "0.1"
 ```
 
+Technical details: [`docs/technical-overview.md`](docs/technical-overview.md)
+
 ## API overview
 
 Two equivalent styles are available. Pick whichever fits your codebase.
@@ -144,32 +146,31 @@ Mirrors `is.empty`, `is.existy`, `is.truthy`, `is.falsy`, `is.space`.
 use is_rs::IS;
 use is_rs::presence::*;
 
-// is.empty — two variants: string and slice
-assert!(IS.empty_str(""));
-assert!(IS.not().empty_str("hi"));
-assert!(IS.all().empty_str(&["", ""]));
+// is.empty
+assert!(IS.empty(""));
+assert!(IS.not().empty("hi"));
+assert!(IS.all().empty(&["", ""]));
 
-assert!(IS.empty_slice::<i32>(&[]));
-assert!(IS.not().empty_slice(&[1]));
+let values = [1, 2, 3];
+assert!(IS.not().empty(&values));
 
-// is.existy (Option)
-assert!(IS.existy_opt(&Some(42)));
-assert!(IS.not().existy_opt::<i32>(&None));
+// is.existy / is.truthy / is.falsy
+assert!(IS.existy(&Some(42)));
+assert!(IS.truthy(1));
+assert!(IS.falsy(0));
+assert!(IS.all().truthy(&[1, 2, 3]));
 
-// is.truthy / is.falsy
-assert!(is_truthy(true));
-assert!(is_falsy(false));
-
-// is.space
-assert!(IS.space("   "));
+// is.space — single whitespace character
+assert!(IS.space(" "));
 assert!(IS.not().space("hi"));
-assert!(IS.all().space(&["  ", "\t"]));
+assert!(IS.all().space(&[" ", "\t"]));
 
 // Module-level
-assert!(is_empty_str(""));
-assert!(is_empty_slice::<i32>(&[]));
+assert!(is_empty(""));
 assert!(is_existy(&Some(1)));
-assert!(is_space("  "));
+assert!(is_truthy("hello"));
+assert!(is_falsy(0));
+assert!(is_space(" "));
 ```
 
 ---
@@ -270,10 +271,12 @@ assert!(IS.all().upper_case(&["ABC", "XYZ"]));
 
 // is.capitalized
 assert!(IS.capitalized("Hello"));
+assert!(IS.capitalized("Hello World"));
 assert!(IS.not().capitalized("hello"));
 
 // is.palindrome
 assert!(IS.palindrome("racecar"));
+assert!(IS.palindrome("A man, a plan, a canal: Panama"));
 assert!(IS.not().palindrome("hello"));
 
 // is.include
@@ -336,7 +339,8 @@ assert!(IS.quarter_of_year(&date, 2));
 // is.inDateRange
 let start = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
 let end   = NaiveDate::from_ymd_opt(2024, 12, 31).unwrap();
-assert!(IS.in_date_range(&date, &start, &end));
+let mid   = NaiveDate::from_ymd_opt(2024, 6, 15).unwrap();
+assert!(IS.in_date_range(&mid, &start, &end));
 
 // is.dayLightSavingTime
 let now_local = Local::now();
@@ -360,7 +364,8 @@ assert!(quarter_of_year(&date, 2));
 
 ## Types
 
-Mirrors `is.nan`, `is.number`, `is.integer` (type-level), `is.char`.
+Mirrors `is.nan`, `is.number`, `is.integer` (type-level), `is.char`, `is.null`,
+`is.undefined`, and `is.sameType`.
 
 > **Note:** Rust's type system makes most of is.js's type checks (`is.string`, `is.boolean`,
 > `is.object`, etc.) redundant — the compiler enforces those at compile time. The checks
@@ -389,11 +394,22 @@ assert!(IS.char("€"));
 assert!(IS.not().char("ab"));
 assert!(IS.all().char(&["a", "b", "c"]));
 
+// null / undefined map to Option::None in Rust
+assert!(IS.null(&Option::<i32>::None));
+assert!(IS.undefined(&Option::<i32>::None));
+assert!(IS.not().null(&Some(1)));
+
+// sameType
+assert!(IS.same_type(&42i32, &7i32));
+assert!(!IS.same_type(&42i32, &7u32));
+
 // Module-level
 assert!(is_nan(f64::NAN));
 assert!(is_number(3.14));
 assert!(is_integer(42.0));
 assert!(is_char("a"));
+assert!(is_null(&Option::<i32>::None));
+assert!(is_same_type(&42i32, &7i32));
 ```
 
 ---
@@ -420,11 +436,11 @@ assert!(is_char("a"));
 | `is.sorted(arr)` | `IS.sorted(arr)` | Generic `PartialOrd` slice |
 | `is.propertyCount(obj, n)` | `IS.property_count(&map, n)` | `HashMap` |
 | `is.propertyDefined(obj, k)` | `IS.property_defined(&map, &k)` | `HashMap` |
-| `is.empty(v)` | `IS.empty_str(s)` / `IS.empty_slice(s)` | Split by type |
-| `is.existy(v)` | `IS.existy_opt(&opt)` | `Option<T>` |
-| `is.truthy(v)` | `presence::is_truthy(b)` | `bool` |
-| `is.falsy(v)` | `presence::is_falsy(b)` | `bool` |
-| `is.space(s)` | `IS.space(s)` | `&str` |
+| `is.empty(v)` | `IS.empty(v)` / `presence::is_empty(v)` | Strings, slices, arrays, vectors, and maps |
+| `is.existy(v)` | `IS.existy(v)` / `presence::is_existy(v)` | `Option::None` is non-existy |
+| `is.truthy(v)` | `IS.truthy(v)` / `presence::is_truthy(v)` | JS-style truthiness for common Rust values |
+| `is.falsy(v)` | `IS.falsy(v)` / `presence::is_falsy(v)` | Negation of `truthy` |
+| `is.space(s)` | `IS.space(s)` | Single whitespace character |
 | `is.url(s)` | `IS.url(s)` | Scheme optional, private IPs rejected |
 | `is.email(s)` | `IS.email(s)` | Full RFC-style regex |
 | `is.creditCard(s)` | `is_credit_card(s)` | |
@@ -481,9 +497,9 @@ assert!(is_char("a"));
 | `is.date(v)` | — | Compile-time in Rust |
 | `is.error(v)` | — | Compile-time in Rust |
 | `is.function(v)` | — | Compile-time in Rust |
-| `is.undefined(v)` | — | Compile-time in Rust (`Option`) |
-| `is.null(v)` | — | Compile-time in Rust (`Option`) |
-| `is.sameType(a, b)` | — | Compile-time in Rust |
+| `is.undefined(v)` | `IS.undefined(&opt)` / `types::is_undefined(&opt)` | `Option::None` |
+| `is.null(v)` | `IS.null(&opt)` / `types::is_null(&opt)` | `Option::None` |
+| `is.sameType(a, b)` | `IS.same_type(&a, &b)` / `types::is_same_type(&a, &b)` | Preserves NaN special-case |
 | `is.arguments(v)` | — | No equivalent concept |
 | `is.regexp(v)` | — | Compile-time in Rust |
 | `is.json(v)` | — | Not yet implemented |

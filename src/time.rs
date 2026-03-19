@@ -217,7 +217,7 @@ pub fn is_weekend(dt: &NaiveDate) -> bool {
     matches!(dt.weekday(), Weekday::Sat | Weekday::Sun)
 }
 
-/// Returns `true` if `dt` is within the inclusive date range `[start, end]`.
+/// Returns `true` if `dt` is within the exclusive date range `(start, end)`.
 ///
 /// # Examples
 ///
@@ -233,7 +233,7 @@ pub fn is_weekend(dt: &NaiveDate) -> bool {
 /// assert!(!in_date_range(&NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(), &start, &end));
 /// ```
 pub fn in_date_range(dt: &NaiveDate, start: &NaiveDate, end: &NaiveDate) -> bool {
-    start <= dt && dt <= end
+    start < dt && dt < end
 }
 
 /// Returns `true` if `dt` is within the last 7 days (inclusive of now).

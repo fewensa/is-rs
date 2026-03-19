@@ -111,6 +111,7 @@ fn weekday_weekend_and_date_range_handle_boundaries() {
     let friday = NaiveDate::from_ymd_opt(2024, 3, 1).expect("valid date");
     let saturday = NaiveDate::from_ymd_opt(2024, 3, 2).expect("valid date");
     let start = NaiveDate::from_ymd_opt(2024, 3, 1).expect("valid date");
+    let inside = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
     let end = NaiveDate::from_ymd_opt(2024, 3, 31).expect("valid date");
     let outside = NaiveDate::from_ymd_opt(2024, 4, 1).expect("valid date");
 
@@ -120,7 +121,9 @@ fn weekday_weekend_and_date_range_handle_boundaries() {
     assert!(is_weekend(&saturday));
     assert!(!is_weekend(&friday));
 
-    assert!(in_date_range(&start, &start, &end));
+    assert!(!in_date_range(&start, &start, &end));
+    assert!(in_date_range(&inside, &start, &end));
+    assert!(!in_date_range(&end, &start, &end));
     assert!(!in_date_range(&outside, &start, &end));
 }
 

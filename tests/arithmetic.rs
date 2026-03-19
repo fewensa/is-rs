@@ -15,6 +15,7 @@ fn test_is_even() {
     assert!(is_even(-2));
     assert!(!is_even(3));
     assert!(!is_even(-1));
+    assert!(!is_even(4.5));
 }
 
 #[test]
@@ -23,6 +24,7 @@ fn test_is_odd() {
     assert!(is_odd(-3));
     assert!(!is_odd(0));
     assert!(!is_odd(4));
+    assert!(!is_odd(3.5));
 }
 
 #[test]
@@ -69,6 +71,7 @@ fn test_is_decimal() {
     assert!(is_decimal(-0.1));
     assert!(!is_decimal(1.0));
     assert!(!is_decimal(0.0));
+    assert!(!is_decimal(f64::NAN));
 }
 
 #[test]
@@ -78,6 +81,7 @@ fn test_is_integer() {
     assert!(is_integer(-4.0));
     assert!(!is_integer(1.5));
     assert!(!is_integer(-0.1));
+    assert!(!is_integer(f64::NAN));
 }
 
 #[test]
@@ -120,8 +124,8 @@ fn test_even_multi_types() {
     assert!(is_even("4"));
     assert!(is_even("0"));
     assert!(!is_even("3"));
-    // "abc" fails to parse → NAN → NAN as i64 = 0 in Rust's saturating cast → even.
-    // This is an implementation detail: invalid strings should not be relied on.
+    assert!(!is_even("abc"));
+    assert!(!is_even("4.5"));
 }
 
 #[test]
@@ -131,6 +135,8 @@ fn test_odd_multi_types() {
     assert!(is_odd(3.0f64));
     assert!(is_odd("3"));
     assert!(!is_odd("4"));
+    assert!(!is_odd("abc"));
+    assert!(!is_odd("3.5"));
 }
 
 #[test]
@@ -191,6 +197,7 @@ fn test_decimal_multi_types() {
     assert!(!is_decimal(1i32));
     assert!(!is_decimal("1"));
     assert!(!is_decimal("1.0"));
+    assert!(!is_decimal("abc"));
 }
 
 #[test]
@@ -201,6 +208,7 @@ fn test_integer_multi_types() {
     assert!(is_integer("2"));
     assert!(!is_integer(1.5f64));
     assert!(!is_integer("1.5"));
+    assert!(!is_integer("abc"));
 }
 
 #[test]

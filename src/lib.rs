@@ -55,15 +55,15 @@
 
 pub mod arithmetic;
 pub mod array;
+pub mod is;
 pub mod object;
 pub mod presence;
 pub mod regexp;
 pub mod string;
 pub mod time;
 pub mod types;
-pub mod is;
 
-pub use is::{Is, Not, All, Any};
+pub use is::{All, Any, Is, Not};
 
 /// Global `Is` instance — the primary entry point for the object-style API.
 ///

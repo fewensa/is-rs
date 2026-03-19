@@ -148,8 +148,9 @@ fn is_empty_str_and_space() {
     assert!(!IS.empty_str("hi"));
     assert!(IS.not().empty_str("hi"));
 
-    assert!(IS.space("   "));
+    assert!(IS.space(" "));
     assert!(!IS.space("hi"));
+    assert!(!IS.space("  "));
 
     // All / Any for &str predicates
     assert!(IS.all().empty_str(&["", ""]));
@@ -168,6 +169,21 @@ fn is_empty_slice_and_existy_opt() {
     assert!(IS.existy_opt(&Some(42)));
     assert!(!IS.existy_opt::<i32>(&None));
     assert!(IS.not().existy_opt::<i32>(&None));
+}
+
+#[test]
+fn generic_presence_checks() {
+    let values = [1, 2, 3];
+
+    assert!(IS.empty(""));
+    assert!(!IS.empty("filled"));
+    assert!(IS.existy("hello"));
+    assert!(IS.truthy(1));
+    assert!(IS.falsy(0));
+    assert!(IS.not().truthy(0));
+    assert!(IS.all().truthy(&[1, 2, 3]));
+    assert!(IS.any().falsy(&[1, 0, 2]));
+    assert!(IS.not().empty(&values));
 }
 
 // ---------------------------------------------------------------------------
@@ -216,12 +232,16 @@ fn is_hex_color_hexadecimal() {
 
 #[test]
 fn is_upper_lower_capitalized_palindrome() {
+    assert!(IS.upper_case(""));
     assert!(IS.upper_case("HELLO"));
     assert!(!IS.upper_case("Hello"));
+    assert!(IS.lower_case(""));
     assert!(IS.lower_case("hello"));
     assert!(IS.capitalized("Hello"));
+    assert!(IS.capitalized("Hello World"));
     assert!(!IS.capitalized("hello"));
     assert!(IS.palindrome("racecar"));
+    assert!(IS.palindrome("A man, a plan, a canal: Panama"));
     assert!(!IS.palindrome("hello"));
 }
 
@@ -318,4 +338,18 @@ fn is_nan_number_char() {
     assert!(!IS.all().nan(&[f64::NAN, 1.0]));
     assert!(IS.any().number(&[f64::NAN, 1.0]));
     assert!(!IS.any().char(&["ab", "cd"]));
+}
+
+#[test]
+fn null_undefined_and_same_type() {
+    assert!(IS.null(&Option::<i32>::None));
+    assert!(IS.undefined(&Option::<i32>::None));
+    assert!(IS.not().null(&Some(1)));
+    assert!(IS.all().null(&[None::<i32>, None::<i32>]));
+    assert!(IS.any().undefined(&[Some(1), None::<i32>]));
+
+    assert!(IS.same_type(&42i32, &7i32));
+    assert!(!IS.same_type(&42i32, &7u32));
+    assert!(!IS.same_type(&f64::NAN, &1.0f64));
+    assert!(IS.not().same_type(&42i32, &7u32));
 }

@@ -63,7 +63,9 @@ macro_rules! impl_num_float {
     };
 }
 
-impl_num_int!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
+impl_num_int!(
+    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
+);
 impl_num_float!(f32, f64);
 
 impl Num for &str {
@@ -74,6 +76,18 @@ impl Num for &str {
 }
 
 // `String` is not `Copy`, so callers should pass `s.as_str()` or `&s` instead.
+
+#[inline]
+fn finite_value<N: Num>(n: N) -> Option<f64> {
+    let value = n.as_f64();
+    value.is_finite().then_some(value)
+}
+
+#[inline]
+fn finite_integer_value<N: Num>(n: N) -> Option<f64> {
+    let value = finite_value(n)?;
+    (value.fract() == 0.0).then_some(value)
+}
 
 /// Returns `true` if `a == b`.
 ///
@@ -103,7 +117,7 @@ pub fn is_equal<T: PartialEq>(a: T, b: T) -> bool {
 /// assert!(!is_even(3i32));
 /// ```
 pub fn is_even<N: Num>(n: N) -> bool {
-    n.as_i64() % 2 == 0
+    finite_integer_value(n).is_some_and(|value| value.rem_euclid(2.0) == 0.0)
 }
 
 /// Returns `true` if `n` is odd.
@@ -120,7 +134,7 @@ pub fn is_even<N: Num>(n: N) -> bool {
 /// assert!(!is_odd(4i32));
 /// ```
 pub fn is_odd<N: Num>(n: N) -> bool {
-    n.as_i64() % 2 != 0
+    finite_integer_value(n).is_some_and(|value| value.rem_euclid(2.0) == 1.0)
 }
 
 /// Returns `true` if `n > 0`.
@@ -223,7 +237,7 @@ pub fn is_within<N: Num>(n: N, min: N, max: N) -> bool {
 /// assert!(!is_decimal("1.0"));
 /// ```
 pub fn is_decimal<N: Num>(n: N) -> bool {
-    n.as_f64().fract() != 0.0
+    finite_value(n).is_some_and(|value| value.fract() != 0.0)
 }
 
 /// Returns `true` if `n` has no fractional component.
@@ -241,7 +255,7 @@ pub fn is_decimal<N: Num>(n: N) -> bool {
 /// assert!(!is_integer("1.5"));
 /// ```
 pub fn is_integer<N: Num>(n: N) -> bool {
-    n.as_f64().fract() == 0.0
+    finite_integer_value(n).is_some()
 }
 
 /// Returns `true` if `n` is finite (not NaN and not infinite).

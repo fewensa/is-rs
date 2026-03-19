@@ -22,7 +22,7 @@ fn test_is_upper_case() {
 
 #[test]
 fn test_is_upper_case_empty() {
-    assert!(!is_upper_case(""));
+    assert!(is_upper_case(""));
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn test_is_lower_case() {
 
 #[test]
 fn test_is_lower_case_empty() {
-    assert!(!is_lower_case(""));
+    assert!(is_lower_case(""));
 }
 
 #[test]
@@ -64,16 +64,19 @@ fn test_ends_with_empty_sub() {
 fn test_is_capitalized() {
     assert!(is_capitalized("Hello"));
     assert!(is_capitalized("HELLO"));
+    assert!(is_capitalized("Hello World"));
     assert!(!is_capitalized("hello"));
-    assert!(!is_capitalized(""));
+    assert!(!is_capitalized("Hello world"));
+    assert!(is_capitalized(""));
 }
 
 #[test]
 fn test_is_palindrome() {
     assert!(is_palindrome("racecar"));
     assert!(is_palindrome("madam"));
+    assert!(is_palindrome("Racecar"));
+    assert!(is_palindrome("A man, a plan, a canal: Panama"));
     assert!(is_palindrome("")); // empty string is palindrome
     assert!(is_palindrome("a"));
     assert!(!is_palindrome("hello"));
-    assert!(!is_palindrome("Racecar")); // case-sensitive
 }

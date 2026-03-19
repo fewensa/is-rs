@@ -28,3 +28,19 @@ fn integer_requires_finite_whole_numbers() {
     assert!(!is_integer(42.5));
     assert!(!is_integer(f64::NEG_INFINITY));
 }
+
+#[test]
+fn null_and_undefined_map_to_none() {
+    assert!(is_null(&Option::<i32>::None));
+    assert!(is_undefined(&Option::<i32>::None));
+    assert!(!is_null(&Some(1)));
+    assert!(!is_undefined(&Some(1)));
+}
+
+#[test]
+fn same_type_matches_concrete_types() {
+    assert!(is_same_type(&42i32, &7i32));
+    assert!(!is_same_type(&42i32, &7u32));
+    assert!(is_same_type(&f64::NAN, &f64::NAN));
+    assert!(!is_same_type(&f64::NAN, &1.0f64));
+}

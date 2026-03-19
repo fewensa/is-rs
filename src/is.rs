@@ -348,6 +348,11 @@ impl_check!(ref empty_str, &str, presence::is_empty_str);
 impl_check!(ref space, &str, presence::is_space);
 
 impl Is {
+    /// Returns `true` if the value is empty.
+    pub fn empty<T: presence::Empty>(&self, v: T) -> bool {
+        presence::is_empty(v)
+    }
+
     /// Returns `true` if the slice is empty.
     ///
     /// ```
@@ -369,15 +374,82 @@ impl Is {
     pub fn existy_opt<T>(&self, v: &Option<T>) -> bool {
         presence::is_existy(v)
     }
+
+    /// Returns `true` if the value is not nullish.
+    pub fn existy<T: presence::Existy>(&self, v: T) -> bool {
+        presence::is_existy(v)
+    }
+
+    /// Returns `true` if the value is truthy.
+    pub fn truthy<T: presence::Truthy>(&self, v: T) -> bool {
+        presence::is_truthy(v)
+    }
+
+    /// Returns `true` if the value is falsy.
+    pub fn falsy<T: presence::Truthy>(&self, v: T) -> bool {
+        presence::is_falsy(v)
+    }
 }
 
 impl Not {
+    pub fn empty<T: presence::Empty>(&self, v: T) -> bool {
+        !presence::is_empty(v)
+    }
+
     pub fn empty_slice<T>(&self, v: &[T]) -> bool {
         !presence::is_empty_slice(v)
     }
 
     pub fn existy_opt<T>(&self, v: &Option<T>) -> bool {
         !presence::is_existy(v)
+    }
+
+    pub fn existy<T: presence::Existy>(&self, v: T) -> bool {
+        !presence::is_existy(v)
+    }
+
+    pub fn truthy<T: presence::Truthy>(&self, v: T) -> bool {
+        !presence::is_truthy(v)
+    }
+
+    pub fn falsy<T: presence::Truthy>(&self, v: T) -> bool {
+        !presence::is_falsy(v)
+    }
+}
+
+impl All {
+    pub fn empty<T: presence::Empty>(&self, values: &[T]) -> bool {
+        values.iter().all(presence::is_empty)
+    }
+
+    pub fn existy<T: presence::Existy>(&self, values: &[T]) -> bool {
+        values.iter().all(presence::is_existy)
+    }
+
+    pub fn truthy<T: presence::Truthy>(&self, values: &[T]) -> bool {
+        values.iter().all(presence::is_truthy)
+    }
+
+    pub fn falsy<T: presence::Truthy>(&self, values: &[T]) -> bool {
+        values.iter().all(presence::is_falsy)
+    }
+}
+
+impl Any {
+    pub fn empty<T: presence::Empty>(&self, values: &[T]) -> bool {
+        values.iter().any(presence::is_empty)
+    }
+
+    pub fn existy<T: presence::Existy>(&self, values: &[T]) -> bool {
+        values.iter().any(presence::is_existy)
+    }
+
+    pub fn truthy<T: presence::Truthy>(&self, values: &[T]) -> bool {
+        values.iter().any(presence::is_truthy)
+    }
+
+    pub fn falsy<T: presence::Truthy>(&self, values: &[T]) -> bool {
+        values.iter().any(presence::is_falsy)
     }
 }
 
@@ -567,3 +639,51 @@ impl Not {
 impl_check!(ref char, &str, types::is_char);
 impl_check!(nan, f64, types::is_nan);
 impl_check!(number, f64, types::is_number);
+
+impl Is {
+    pub fn null<T>(&self, value: &Option<T>) -> bool {
+        types::is_null(value)
+    }
+
+    pub fn undefined<T>(&self, value: &Option<T>) -> bool {
+        types::is_undefined(value)
+    }
+
+    pub fn same_type<T: 'static, U: 'static>(&self, value: &T, other: &U) -> bool {
+        types::is_same_type(value, other)
+    }
+}
+
+impl Not {
+    pub fn null<T>(&self, value: &Option<T>) -> bool {
+        !types::is_null(value)
+    }
+
+    pub fn undefined<T>(&self, value: &Option<T>) -> bool {
+        !types::is_undefined(value)
+    }
+
+    pub fn same_type<T: 'static, U: 'static>(&self, value: &T, other: &U) -> bool {
+        !types::is_same_type(value, other)
+    }
+}
+
+impl All {
+    pub fn null<T>(&self, values: &[Option<T>]) -> bool {
+        values.iter().all(types::is_null)
+    }
+
+    pub fn undefined<T>(&self, values: &[Option<T>]) -> bool {
+        values.iter().all(types::is_undefined)
+    }
+}
+
+impl Any {
+    pub fn null<T>(&self, values: &[Option<T>]) -> bool {
+        values.iter().any(types::is_null)
+    }
+
+    pub fn undefined<T>(&self, values: &[Option<T>]) -> bool {
+        values.iter().any(types::is_undefined)
+    }
+}
